@@ -1,0 +1,6 @@
+colorama
+docopt
+requests
+retrying
+PyYAML
+python-dateutil
