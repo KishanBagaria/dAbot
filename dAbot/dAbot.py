@@ -6,35 +6,32 @@ http://kishan-bagaria.deviantart.com/
 http://kishanbagaria.com/
 
 Usage:
-  dAbot.py <username> <password> [-v] llama      give          random        (deviants|groups|exchangers)
-  dAbot.py <username> <password> [-v] llama      give          msgs          (activity|replies)           [--trash_msgs]
-  dAbot.py <username> <password> [-v] llama      give          file          (dev_names|dev_ids)          <file_path>
-  dAbot.py <username> <password> [-v] llama      give          group_members <group>                      [--reversed]
-  dAbot.py <username> <password> [-v] llama      give          url           <url>
-  dAbot.py <username> <password> [-v] llama      give          traders
-  dAbot.py <username> <password> [-v] llama      give          traders_random
-  dAbot.py <username> <password> [-v] llama      give          <deviant>
-  dAbot.py <username> <password> [-v] points     give          <deviant>     <amount>                     [<message>]
-  dAbot.py <username> <password> [-v] points     balance
-  dAbot.py <username> <password> [-v] devwatch   (add|remove)  <deviant>
-  dAbot.py <username> <password> [-v] msgs       trash         (activity|bulletins|notices|replies|comments)
-  dAbot.py <username> <password> [-v] comment    <deviant>     <comment>
-  dAbot.py <username> <password> [-v] logout
-  dAbot.py <username> <password> [-v] exec       <code>
-  dAbot.py <username> <password> [-v] llama      stats         <deviant>
-  dAbot.py <username> <password> [-v] llama      hof           group         <group_name> [--reversed]
-  dAbot.py <username> <password> [-v] llama      hof           file          <file_path>
-  dAbot.py <username> <password> [-v] llama      hof           <deviant_names>...
-  dAbot.py <username> <password> [-v] badges     hof           <deviant_names>...
-  dAbot.py <username> <password> [-v] save       random        (deviants|groups|exchangers)               <quantity>
-  dAbot.py <username> <password> [-v] save       group_members <group>
-  dAbot.py <username> <password> [-v] save       dev_ids       <dev_names_file_path>                      [--if_llama_given]
+  dAbot <username> <password> [-v] llama      give          random        (deviants|groups|exchangers)
+  dAbot <username> <password> [-v] llama      give          msgs          (activity|replies)           [--trash_msgs]
+  dAbot <username> <password> [-v] llama      give          file          (dev_names|dev_ids)          <file_path>
+  dAbot <username> <password> [-v] llama      give          group_members <group>                      [--reversed]
+  dAbot <username> <password> [-v] llama      give          url           <url>
+  dAbot <username> <password> [-v] llama      give          traders
+  dAbot <username> <password> [-v] llama      give          traders_random
+  dAbot <username> <password> [-v] llama      give          <deviant>
+  dAbot <username> <password> [-v] points     give          <deviant>     <amount>                     [<message>]
+  dAbot <username> <password> [-v] points     balance
+  dAbot <username> <password> [-v] devwatch   (add|remove)  <deviant>
+  dAbot <username> <password> [-v] msgs       trash         (activity|bulletins|notices|replies|comments)
+  dAbot <username> <password> [-v] comment    <deviant>     <comment>
+  dAbot <username> <password> [-v] logout
+  dAbot <username> <password> [-v] exec       <code>
+  dAbot <username> <password> [-v] llama      stats         <deviant>
+  dAbot <username> <password> [-v] llama      hof           group         <group_name> [--reversed]
+  dAbot <username> <password> [-v] llama      hof           file          <file_path>
+  dAbot <username> <password> [-v] llama      hof           <deviant_names>...
+  dAbot <username> <password> [-v] badges     hof           <deviant_names>...
+  dAbot <username> <password> [-v] save       random        (deviants|groups|exchangers)               <quantity>
+  dAbot <username> <password> [-v] save       group_members <group>
+  dAbot <username> <password> [-v] save       dev_ids       <dev_names_file_path>                      [--if_llama_given]
 """
 
 from __future__ import division
-__author__ = "Kishan Bagaria"
-__email__ = "hi@kishan.info"
-__status__ = "Development"
 
 try:
     import sets
@@ -532,33 +529,67 @@ def sigint_handler(signum, frame):
     print_stats()
     sys.exit()
 
-DATA_PATH = 'Data/'
-COOKIES_PATH = DATA_PATH + 'Cookies/'
-TRANSACTIONS_PATH = DATA_PATH + 'LlamaTransactions/'
+args = docopt(__doc__)
+OS = [
+    'Windows NT 6.3; WOW64',
+    'Windows NT 6.3; Win64; x64',
+    'Windows NT 6.2',
+    'Windows NT 6.1',
+    'Macintosh; Intel Mac OS X 10_10_3'
+]
+USER_AGENTS = [
+    'Mozilla/5.0 (%s) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/36.0.1985.143 Safari/537.36',
+    'Mozilla/5.0 (%s) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2049.0 Safari/537.36',
+    'Mozilla/5.0 (%s) Gecko/20100101 Firefox/33.0',
+    'Mozilla/5.0 (%s) Gecko/20100101 Firefox/34.0',
+    'Mozilla/5.0 (%s) Gecko/20100101 Firefox/35.0',
+    'Mozilla/5.0 (%s) Gecko/20100101 Firefox/36.0'
+]
+SPAM_FILTER_START_WAIT = 60*30 # 30 minutes
+SPAM_FILTER_EACH_WAIT = 0
+LLAMA_TRADE_WAIT = 120
 
-def save_data():
-    global username
-    for d in [COOKIES_PATH, TRANSACTIONS_PATH]:
-        if not os.path.exists(d):
-            os.makedirs(d)
-    with open(COOKIES_PATH + username + '.pickle', 'wb') as f:
-        pickle.dump(dA.cookies, f, pickle.HIGHEST_PROTOCOL)
-    LlamaTransactions.update(read_llama_transactions())
-    with bz2.BZ2File(TRANSACTIONS_PATH + username + '.json.bz2', 'w') as f:
-        json.dump(list(LlamaTransactions), f, separators=(',', ':'))
-    print_stats()
+VERBOSE = args['-v']
+username, password = args['<username>'], args['<password>']
+
+os.chdir(os.path.dirname(os.path.realpath(sys.argv[0])))
+DATA_DIRPATH = 'Data' if os.path.exists('Data') else os.path.expanduser('~/.dAbot')
+
+COOKIES_DIRPATH = os.path.join(DATA_DIRPATH, 'Cookies')
+TRANSACTIONS_DIR_PATH = os.path.join(DATA_DIRPATH, 'LlamaTransactions')
+COOKIE_PATH = os.path.join(COOKIES_DIRPATH, username + '.pickle')
+LLAMA_TRANSACTIONS_PATH = os.path.join(TRANSACTIONS_DIR_PATH, username + '.json.bz2')
 
 def read_llama_transactions():
-    if os.path.isfile(TRANSACTIONS_PATH + username + '.json.bz2'):
-        with bz2.BZ2File(TRANSACTIONS_PATH + username + '.json.bz2', 'r') as f:
+    if os.path.isfile(LLAMA_TRANSACTIONS_PATH):
+        with bz2.BZ2File(LLAMA_TRANSACTIONS_PATH, 'r') as f:
             return set(json.load(f))
     return set()
+def save_llama_transactions():
+    with bz2.BZ2File(LLAMA_TRANSACTIONS_PATH, 'w') as f:
+        json.dump(list(LlamaTransactions), f, separators=(',', ':'))
+def read_cookies():
+    if os.path.isfile(COOKIE_PATH):
+        with open(COOKIE_PATH, 'rb') as f:
+            dA.cookies = pickle.load(f)
+def save_cookies():
+    with open(COOKIE_PATH, 'wb') as f:
+        pickle.dump(dA.cookies, f, pickle.HIGHEST_PROTOCOL)
+
+def save_data():
+    for d in [COOKIES_DIRPATH, TRANSACTIONS_DIR_PATH]:
+        if not os.path.exists(d):
+            os.makedirs(d)
+    save_cookies()
+    LlamaTransactions.update(read_llama_transactions())
+    save_llama_transactions()
+    print_stats()
 
 def load_data():
-    global LlamaTransactions, username
-    if os.path.isfile(COOKIES_PATH + username + '.pickle'):
-        with open(COOKIES_PATH + username + '.pickle', 'rb') as f:
-            dA.cookies = pickle.load(f)
+    global LlamaTransactions
+    if VERBOSE:
+        echo('Data Directory Path: %s' % DATA_DIRPATH)
+    read_cookies()
     LlamaTransactions = read_llama_transactions()
     print_stats.transactions_count = len(LlamaTransactions)
     echo('[Llama Transactions] %d' % len(LlamaTransactions))
@@ -592,28 +623,6 @@ else:
             self._title = value
     console = Console()
 
-OS = [
-    'Windows NT 6.3; WOW64',
-    'Windows NT 6.3; Win64; x64',
-    'Windows NT 6.2',
-    'Windows NT 6.1',
-    'Macintosh; Intel Mac OS X 10_10_3'
-]
-USER_AGENTS = [
-    'Mozilla/5.0 (%s) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/36.0.1985.143 Safari/537.36',
-    'Mozilla/5.0 (%s) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2049.0 Safari/537.36',
-    'Mozilla/5.0 (%s) Gecko/20100101 Firefox/33.0',
-    'Mozilla/5.0 (%s) Gecko/20100101 Firefox/34.0',
-    'Mozilla/5.0 (%s) Gecko/20100101 Firefox/35.0',
-    'Mozilla/5.0 (%s) Gecko/20100101 Firefox/36.0'
-]
-SPAM_FILTER_START_WAIT = 60*30 # 30 minutes
-SPAM_FILTER_EACH_WAIT = 0
-LLAMA_TRADE_WAIT = 120
-
-args = docopt(__doc__)
-VERBOSE = args['-v']
-
 def header_size(headers):
     return sum(len(key) + len(value) + 4 for key, value in headers.items()) + 2
 
@@ -644,6 +653,8 @@ def retry_if_network_error(exception):
 
 def pick_da_useragent():
     dA.headers['User-Agent'] = random.choice(USER_AGENTS) % random.choice(OS)
+    if VERBOSE:
+        echo('[User-Agent] %s' % dA.headers['User-Agent'])
 
 dA = requests.session()
 req = requests.session()
@@ -654,15 +665,12 @@ for _ in [dA, req]:
 LlamaTransactions = set()
 
 def init():
-    global username, password
-    username, password = args['<username>'], args['<password>']
     pick_da_useragent()
-    os.chdir(os.path.dirname(os.path.realpath(sys.argv[0])))
     atexit.register(save_data)
     load_data()
 
 @retry(wait_exponential_multiplier=1*60*1000, retry_on_exception=retry_if_network_error)
-def main():
+def run():
     if not is_logged_in(username):
         if not login(username, password):
             sys.exit()
@@ -798,6 +806,9 @@ def main():
         print(code)
         exec(code)
 
-if __name__ == '__main__':
+def main():
     init()
+    run()
+
+if __name__ == '__main__':
     main()
