@@ -2,7 +2,7 @@
 
 CLI tool to automate stuff on DeviantArt.com
 
-### Installation
+## Installation
 
 1. [Install Python 2](https://www.python.org/downloads/)
 2. Open Terminal/Command Prompt and enter `pip install dAbot`  
@@ -10,7 +10,7 @@ CLI tool to automate stuff on DeviantArt.com
     If that doesn't work either, you're likely using Windows and you should reinstall Python making sure that the "Add in PATH" option is checked.
 3. Once dAbot is installed, you can use any of the commands listed below by entering them in Terminal/Command Prompt.
 
-### Usage
+## Usage
 
 ```
 dAbot <username> <password> [-v] llama      give          random        (deviants|groups|exchangers)
@@ -37,3 +37,8 @@ dAbot <username> <password> [-v] save       random        (deviants|groups|excha
 dAbot <username> <password> [-v] save       group_members <group>
 dAbot <username> <password> [-v] save       dev_ids       <dev_names_file_path>                      [--if_llama_given]
 ```
+
+## Disclaimer
+
+I don't intend to maintain this tool (except for some occasional changes). I developed this as a personal project back in 2014 and three years later, it wasn't doing much good sitting around, so I put it out here.  
+It can be refactored a lot and sped up 100x using asynchronous connections. If you're a developer interested in hacking the code, you should definitely look into that.
