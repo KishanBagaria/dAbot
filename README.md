@@ -10,6 +10,8 @@ CLI tool to automate stuff on DeviantArt.com
     If that doesn't work either, you're likely using Windows and you should reinstall Python making sure that the "Add in PATH" option is checked.
 3. Once dAbot is installed, you can use any of the commands listed below by entering them in Terminal/Command Prompt.
 
+To upgrade it later, run `pip install dAbot --upgrade`
+
 ## Usage
 
 ```

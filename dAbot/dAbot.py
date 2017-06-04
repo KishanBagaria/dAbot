@@ -293,7 +293,8 @@ def echo_llamalist_stats(dev_names, badges=False, proof=True):
     stats = {}
     for dev_name in dev_names:
         counts = get_llama_stats(dev_name) if not badges else get_badges_stats(dev_name)
-        dev_name = counts['Name']
+        dev_name = counts.get('Name')
+        if not dev_name: continue
         stats[dev_name] = counts
         print('@{} {:,} badges sent, {:,} badges received'.format(dev_name, counts['Given'], counts['Received']))
     print(Fore.GREEN + '---' + Style.RESET_ALL)
