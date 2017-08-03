@@ -536,15 +536,17 @@ OS = [
     'Windows NT 6.3; Win64; x64',
     'Windows NT 6.2',
     'Windows NT 6.1',
-    'Macintosh; Intel Mac OS X 10_10_3'
+    'Macintosh; Intel Mac OS X 10_10_3',
+    'Macintosh; Intel Mac OS X 10_11_1',
+    'Macintosh; Intel Mac OS X 10_12_5',
+    'Macintosh; Intel Mac OS X 10_13_1'
 ]
 USER_AGENTS = [
-    'Mozilla/5.0 (%s) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/36.0.1985.143 Safari/537.36',
-    'Mozilla/5.0 (%s) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2049.0 Safari/537.36',
-    'Mozilla/5.0 (%s) Gecko/20100101 Firefox/33.0',
-    'Mozilla/5.0 (%s) Gecko/20100101 Firefox/34.0',
-    'Mozilla/5.0 (%s) Gecko/20100101 Firefox/35.0',
-    'Mozilla/5.0 (%s) Gecko/20100101 Firefox/36.0'
+    'Mozilla/5.0 (%s) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.78 Safari/537.36',
+    'Mozilla/5.0 (%s) Gecko/20100101 Firefox/46.0',
+    'Mozilla/5.0 (%s) Gecko/20100101 Firefox/47.0',
+    'Mozilla/5.0 (%s) Gecko/20100101 Firefox/48.0',
+    'Mozilla/5.0 (%s) Gecko/20100101 Firefox/49.0'
 ]
 SPAM_FILTER_START_WAIT = 60*30 # 30 minutes
 SPAM_FILTER_EACH_WAIT = 0
@@ -663,6 +665,8 @@ for _ in [dA, req]:
     _.trust_env = False
     _.hooks = {'response': response_hook}
     _.headers['Accept-Encoding'] = 'gzip,deflate'
+    _.headers['Accept-Language'] = 'en'
+
 LlamaTransactions = set()
 
 def init():
