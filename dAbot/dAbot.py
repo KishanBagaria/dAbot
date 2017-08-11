@@ -2,8 +2,8 @@
 """
 dAbot by Kishan Bagaria
 
-http://kishan-bagaria.deviantart.com/
-http://kishanbagaria.com/
+https://kishan-bagaria.deviantart.com/
+https://kishanbagaria.com/
 
 Usage:
   dAbot <username> <password> [-v] llama      give          random        (deviants|groups|exchangers)
@@ -104,21 +104,21 @@ regex = {
 }
 
 url = {
-    'badges_page'         : 'http://%s.deviantart.com/badges/',
-    'llama_page'          : 'http://%s.deviantart.com/badges/llama/',
-    'group_member_list'   : 'http://%s.deviantart.com/modals/memberlist/?offset=%d',
-    'activity'            : 'http://%s.deviantart.com/activity/',
-    'me_profile'          : 'http://me.deviantart.com/',
-    'llama_trade'         : 'http://llamatrade.deviantart.com/',
-    'random'              : 'http://www.deviantart.com/random/',
-    'login_ref'           : 'http://www.deviantart.com/users/loggedin',
-    'difi_get'            : 'http://www.deviantart.com/global/difi/?t=json&c[]=',
-    'difi_post'           : 'http://www.deviantart.com/global/difi/',
-    'points'              : 'http://www.deviantart.com/account/points/',
-    'llama_give'          : 'https://www.deviantart.com/modal/badge/give?badgetype=llama&referrer=http://deviantart.com&to_user=',
+    'badges_page'         : 'https://%s.deviantart.com/badges/',
+    'llama_page'          : 'https://%s.deviantart.com/badges/llama/',
+    'group_member_list'   : 'https://%s.deviantart.com/modals/memberlist/?offset=%d',
+    'activity'            : 'https://%s.deviantart.com/activity/',
+    'me_profile'          : 'https://me.deviantart.com/',
+    'llama_trade'         : 'https://llamatrade.deviantart.com/',
+    'random'              : 'https://www.deviantart.com/random/',
+    'login_ref'           : 'https://www.deviantart.com/users/loggedin',
+    'difi_get'            : 'https://www.deviantart.com/global/difi/?t=json&c[]=',
+    'difi_post'           : 'https://www.deviantart.com/global/difi/',
+    'points'              : 'https://www.deviantart.com/account/points/',
+    'llama_give'          : 'https://www.deviantart.com/modal/badge/give?badgetype=llama&referrer=https://deviantart.com&to_user=',
     'process_trade'       : 'https://www.deviantart.com/modal/badge/process_trade',
-    'process_trade_ref'   : 'http://www.deviantart.com/',
-    'msg_center'          : 'http://www.deviantart.com/notifications/',
+    'process_trade_ref'   : 'https://www.deviantart.com/',
+    'msg_center'          : 'https://www.deviantart.com/notifications/',
     'login'               : 'https://www.deviantart.com/users/login',
     'logout'              : 'https://www.deviantart.com/users/logout'
 }
@@ -217,7 +217,7 @@ def login(username, password):
 
 def is_logged_in(username):
     echo('Checking if logged in as ' + username)
-    return dA.head(url['me_profile']).headers.get('Location').lower() == 'http://' + username.lower() + '.deviantart.com/'
+    return dA.head(url['me_profile']).headers.get('Location').lower() == 'https://' + username.lower() + '.deviantart.com/'
 
 def logout():
     echo('Logging out %s from all sessions' % username)
@@ -302,7 +302,7 @@ def echo_llamalist_stats(dev_names, badges=False, proof=True):
     #+k[1]['Received']
     for dev_name, counts in sorted(stats.items(), key=lambda k: k[1]['Given'], reverse=True):
         if proof:
-            print('{}. @{} {:,} badges sent, {:,} badges received <a href="http://{}.deviantart.com/badges/{}">[proof]</a><br>'
+            print('{}. @{} {:,} badges sent, {:,} badges received <a href="https://{}.deviantart.com/badges/{}">[proof]</a><br>'
               .format(num, dev_name, counts['Given'], counts['Received'], dev_name, '' if badges else 'llama/'))
         else:
             print('{}. @{} {:,} badges sent, {:,} badges received<br>'
