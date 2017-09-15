@@ -9,7 +9,7 @@ here = path.abspath(path.dirname(__file__))
 
 setup(
   name='dAbot',
-  version='2017.08.11',
+  version='2017.09.15',
   description='CLI tool to automate stuff on DeviantArt.com',
   url='https://github.com/KishanBagaria/dAbot',
   author='Kishan Bagaria',

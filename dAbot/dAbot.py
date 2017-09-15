@@ -63,6 +63,7 @@ import atexit
 import ctypes
 import signal
 import urllib
+import urlparse
 import datetime
 import random
 import bz2
@@ -187,7 +188,8 @@ def get_redirected_url(url):
     return req.head(url).headers['Location']
 
 def get_random(what):
-    return get_redirected_url(url['random'] + what).split('.')[0][7:]
+    parsed = urlparse.urlparse(get_redirected_url(url['random'] + what))
+    return parsed.hostname.split('.')[0]
 
 def get_dev_id(dev_name):
     dev_name = dev_name.lower()
