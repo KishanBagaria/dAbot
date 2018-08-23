@@ -85,7 +85,7 @@ regex = {
     'given_llama_count'    : '<td class="f">Given:</td><td class="f">([\d,]+|No).+?</td>',
     'badges_count'         : '([\d,]+|No) Badges sent, ([\d,]+|No) Badges received',
     'points_balance'       : 'data-balance="([\d,]+)"',
-    'dev_names'            : r'([A-Za-z0-9-]+)\.deviantart\.com',
+    'dev_names'            : r'www\.deviantart\.com/([A-Za-z0-9-]+)',
     'llama_dev_name'       : 'Give a <strong>Llama Badge</strong> to <.+>([A-Za-z0-9-]+)<.+>\?',
     'llama_type'           : r'You have given\s+a\s+([a-zA-Z ]+?)\s+Badge\s+to',
     'llama_error_msg'      : '<li class="field_error".*?>(.+)</li>',
@@ -201,11 +201,12 @@ def login(username, password):
     echo('Downloading login page')
     login_html = dA.get(url['login']).text
     params = {
-        'validate_token' : get_validate_token(login_html),
-        'validate_key'   : get_validate_key(login_html),
+        'ref'            : url['login_ref'],
         'username'       : username,
         'password'       : password,
-        'ref'            : url['login_ref']
+        'remember_me'    : 1,
+        'validate_token' : get_validate_token(login_html),
+        'validate_key'   : get_validate_key(login_html)
     }
     echo('Logging in as %s' % username)
     post = dA.post(url['login'], data=params)
@@ -540,15 +541,16 @@ OS = [
     'Windows NT 6.1',
     'Macintosh; Intel Mac OS X 10_10_3',
     'Macintosh; Intel Mac OS X 10_11_1',
-    'Macintosh; Intel Mac OS X 10_12_5',
-    'Macintosh; Intel Mac OS X 10_13_1'
+    'Macintosh; Intel Mac OS X 10_12_6',
+    'Macintosh; Intel Mac OS X 10_13_0'
 ]
 USER_AGENTS = [
     'Mozilla/5.0 (%s) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.78 Safari/537.36',
-    'Mozilla/5.0 (%s) Gecko/20100101 Firefox/46.0',
-    'Mozilla/5.0 (%s) Gecko/20100101 Firefox/47.0',
-    'Mozilla/5.0 (%s) Gecko/20100101 Firefox/48.0',
-    'Mozilla/5.0 (%s) Gecko/20100101 Firefox/49.0'
+    'Mozilla/5.0 (%s) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36',
+    'Mozilla/5.0 (%s) Gecko/20100101 Firefox/51.0',
+    'Mozilla/5.0 (%s) Gecko/20100101 Firefox/52.0',
+    'Mozilla/5.0 (%s) Gecko/20100101 Firefox/53.0',
+    'Mozilla/5.0 (%s) Gecko/20100101 Firefox/54.0'
 ]
 SPAM_FILTER_START_WAIT = 60*30 # 30 minutes
 SPAM_FILTER_EACH_WAIT = 0
@@ -663,11 +665,19 @@ def pick_da_useragent():
 
 dA = requests.session()
 req = requests.session()
+PROXIED = False
 for _ in [dA, req]:
     _.trust_env = False
     _.hooks = {'response': response_hook}
-    _.headers['Accept-Encoding'] = 'gzip,deflate'
+    _.headers['Accept'] = '*/*'
+    _.headers['Accept-Encoding'] = 'gzip, deflate'
     _.headers['Accept-Language'] = 'en'
+    if PROXIED:
+        _.proxies = {
+          'http': '127.0.0.1:8080',
+          'https': '127.0.0.1:8080'
+        }
+        _.verify = False
 
 LlamaTransactions = set()
 

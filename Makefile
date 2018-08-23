@@ -3,7 +3,7 @@ all: clean build
 clean:
 	rm -rf dist/ build/ *.egg-info
 build:
-	./setup.py sdist bdist_wheel
+	python2 setup.py sdist bdist_wheel
 
 upload-test:
 	twine upload -r pypitest dist/*
