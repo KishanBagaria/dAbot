@@ -2,39 +2,36 @@
 """
 dAbot by Kishan Bagaria
 
-http://kishan-bagaria.deviantart.com/
-http://kishanbagaria.com/
+https://kishan-bagaria.deviantart.com/
+https://kishanbagaria.com/
 
 Usage:
-  dAbot.py <username> <password> [-v] llama      give          random        (deviants|groups|exchangers)
-  dAbot.py <username> <password> [-v] llama      give          msgs          (activity|replies)           [--trash_msgs]
-  dAbot.py <username> <password> [-v] llama      give          file          (dev_names|dev_ids)          <file_path>
-  dAbot.py <username> <password> [-v] llama      give          group_members <group>                      [--reversed]
-  dAbot.py <username> <password> [-v] llama      give          url           <url>
-  dAbot.py <username> <password> [-v] llama      give          traders
-  dAbot.py <username> <password> [-v] llama      give          traders_random
-  dAbot.py <username> <password> [-v] llama      give          <deviant>
-  dAbot.py <username> <password> [-v] points     give          <deviant>     <amount>                     [<message>]
-  dAbot.py <username> <password> [-v] points     balance
-  dAbot.py <username> <password> [-v] devwatch   (add|remove)  <deviant>
-  dAbot.py <username> <password> [-v] msgs       trash         (activity|bulletins|notices|replies|comments)
-  dAbot.py <username> <password> [-v] comment    <deviant>     <comment>
-  dAbot.py <username> <password> [-v] logout
-  dAbot.py <username> <password> [-v] exec       <code>
-  dAbot.py <username> <password> [-v] llama      stats         <deviant>
-  dAbot.py <username> <password> [-v] llama      hof           group         <group_name> [--reversed]
-  dAbot.py <username> <password> [-v] llama      hof           file          <file_path>
-  dAbot.py <username> <password> [-v] llama      hof           <deviant_names>...
-  dAbot.py <username> <password> [-v] badges     hof           <deviant_names>...
-  dAbot.py <username> <password> [-v] save       random        (deviants|groups|exchangers)               <quantity>
-  dAbot.py <username> <password> [-v] save       group_members <group>
-  dAbot.py <username> <password> [-v] save       dev_ids       <dev_names_file_path>                      [--if_llama_given]
+  dAbot <username> <password> [-v] llama      give          random        (deviants|groups|exchangers)
+  dAbot <username> <password> [-v] llama      give          msgs          (activity|replies)           [--trash_msgs]
+  dAbot <username> <password> [-v] llama      give          file          (dev_names|dev_ids)          <file_path>
+  dAbot <username> <password> [-v] llama      give          group_members <group>                      [--reversed]
+  dAbot <username> <password> [-v] llama      give          url           <url>
+  dAbot <username> <password> [-v] llama      give          traders
+  dAbot <username> <password> [-v] llama      give          traders_random
+  dAbot <username> <password> [-v] llama      give          <deviant>
+  dAbot <username> <password> [-v] points     give          <deviant>     <amount>                     [<message>]
+  dAbot <username> <password> [-v] points     balance
+  dAbot <username> <password> [-v] devwatch   (add|remove)  <deviant>
+  dAbot <username> <password> [-v] msgs       trash         (activity|bulletins|notices|replies|comments)
+  dAbot <username> <password> [-v] comment    <deviant>     <comment>
+  dAbot <username> <password> [-v] logout
+  dAbot <username> <password> [-v] exec       <code>
+  dAbot <username> <password> [-v] llama      stats         <deviant>
+  dAbot <username> <password> [-v] llama      hof           group         <group_name> [--reversed]
+  dAbot <username> <password> [-v] llama      hof           file          <file_path>
+  dAbot <username> <password> [-v] llama      hof           <deviant_names>...
+  dAbot <username> <password> [-v] badges     hof           <deviant_names>...
+  dAbot <username> <password> [-v] save       random        (deviants|groups|exchangers)               <quantity>
+  dAbot <username> <password> [-v] save       group_members <group>
+  dAbot <username> <password> [-v] save       dev_ids       <dev_names_file_path>                      [--if_llama_given]
 """
 
 from __future__ import division
-__author__ = "Kishan Bagaria"
-__email__ = "hi@kishan.info"
-__status__ = "Development"
 
 try:
     import sets
@@ -66,6 +63,7 @@ import atexit
 import ctypes
 import signal
 import urllib
+import urlparse
 import datetime
 import random
 import bz2
@@ -87,7 +85,7 @@ regex = {
     'given_llama_count'    : '<td class="f">Given:</td><td class="f">([\d,]+|No).+?</td>',
     'badges_count'         : '([\d,]+|No) Badges sent, ([\d,]+|No) Badges received',
     'points_balance'       : 'data-balance="([\d,]+)"',
-    'dev_names'            : r'([A-Za-z0-9-]+)\.deviantart\.com',
+    'dev_names'            : r'www\.deviantart\.com/([A-Za-z0-9-]+)',
     'llama_dev_name'       : 'Give a <strong>Llama Badge</strong> to <.+>([A-Za-z0-9-]+)<.+>\?',
     'llama_type'           : r'You have given\s+a\s+([a-zA-Z ]+?)\s+Badge\s+to',
     'llama_error_msg'      : '<li class="field_error".*?>(.+)</li>',
@@ -107,21 +105,21 @@ regex = {
 }
 
 url = {
-    'badges_page'         : 'http://%s.deviantart.com/badges/',
-    'llama_page'          : 'http://%s.deviantart.com/badges/llama/',
-    'group_member_list'   : 'http://%s.deviantart.com/modals/memberlist/?offset=%d',
-    'activity'            : 'http://%s.deviantart.com/activity/',
-    'me_profile'          : 'http://me.deviantart.com/',
-    'llama_trade'         : 'http://llamatrade.deviantart.com/',
-    'random'              : 'http://www.deviantart.com/random/',
-    'login_ref'           : 'http://www.deviantart.com/users/loggedin',
-    'difi_get'            : 'http://www.deviantart.com/global/difi/?t=json&c[]=',
-    'difi_post'           : 'http://www.deviantart.com/global/difi/',
-    'points'              : 'http://www.deviantart.com/account/points/',
-    'llama_give'          : 'https://www.deviantart.com/modal/badge/give?badgetype=llama&referrer=http://deviantart.com&to_user=',
+    'badges_page'         : 'https://%s.deviantart.com/badges/',
+    'llama_page'          : 'https://%s.deviantart.com/badges/llama/',
+    'group_member_list'   : 'https://%s.deviantart.com/modals/memberlist/?offset=%d',
+    'activity'            : 'https://%s.deviantart.com/activity/',
+    'me_profile'          : 'https://me.deviantart.com/',
+    'llama_trade'         : 'https://llamatrade.deviantart.com/',
+    'random'              : 'https://www.deviantart.com/random/',
+    'login_ref'           : 'https://www.deviantart.com/users/loggedin',
+    'difi_get'            : 'https://www.deviantart.com/global/difi/?t=json&c[]=',
+    'difi_post'           : 'https://www.deviantart.com/global/difi/',
+    'points'              : 'https://www.deviantart.com/account/points/',
+    'llama_give'          : 'https://www.deviantart.com/modal/badge/give?badgetype=llama&referrer=https://deviantart.com&to_user=',
     'process_trade'       : 'https://www.deviantart.com/modal/badge/process_trade',
-    'process_trade_ref'   : 'http://www.deviantart.com/',
-    'msg_center'          : 'http://www.deviantart.com/notifications/',
+    'process_trade_ref'   : 'https://www.deviantart.com/',
+    'msg_center'          : 'https://www.deviantart.com/notifications/',
     'login'               : 'https://www.deviantart.com/users/login',
     'logout'              : 'https://www.deviantart.com/users/logout'
 }
@@ -190,7 +188,8 @@ def get_redirected_url(url):
     return req.head(url).headers['Location']
 
 def get_random(what):
-    return get_redirected_url(url['random'] + what).split('.')[0][7:]
+    parsed = urlparse.urlparse(get_redirected_url(url['random'] + what))
+    return parsed.hostname.split('.')[0]
 
 def get_dev_id(dev_name):
     dev_name = dev_name.lower()
@@ -202,11 +201,12 @@ def login(username, password):
     echo('Downloading login page')
     login_html = dA.get(url['login']).text
     params = {
-        'validate_token' : get_validate_token(login_html),
-        'validate_key'   : get_validate_key(login_html),
+        'ref'            : url['login_ref'],
         'username'       : username,
         'password'       : password,
-        'ref'            : url['login_ref']
+        'remember_me'    : 1,
+        'validate_token' : get_validate_token(login_html),
+        'validate_key'   : get_validate_key(login_html)
     }
     echo('Logging in as %s' % username)
     post = dA.post(url['login'], data=params)
@@ -220,7 +220,7 @@ def login(username, password):
 
 def is_logged_in(username):
     echo('Checking if logged in as ' + username)
-    return dA.head(url['me_profile']).headers.get('Location').lower() == 'http://' + username.lower() + '.deviantart.com/'
+    return dA.head(url['me_profile']).headers.get('Location').lower() == 'https://' + username.lower() + '.deviantart.com/'
 
 def logout():
     echo('Logging out %s from all sessions' % username)
@@ -296,7 +296,8 @@ def echo_llamalist_stats(dev_names, badges=False, proof=True):
     stats = {}
     for dev_name in dev_names:
         counts = get_llama_stats(dev_name) if not badges else get_badges_stats(dev_name)
-        dev_name = counts['Name']
+        dev_name = counts.get('Name')
+        if not dev_name: continue
         stats[dev_name] = counts
         print('@{} {:,} badges sent, {:,} badges received'.format(dev_name, counts['Given'], counts['Received']))
     print(Fore.GREEN + '---' + Style.RESET_ALL)
@@ -304,7 +305,7 @@ def echo_llamalist_stats(dev_names, badges=False, proof=True):
     #+k[1]['Received']
     for dev_name, counts in sorted(stats.items(), key=lambda k: k[1]['Given'], reverse=True):
         if proof:
-            print('{}. @{} {:,} badges sent, {:,} badges received <a href="http://{}.deviantart.com/badges/{}">[proof]</a><br>'
+            print('{}. @{} {:,} badges sent, {:,} badges received <a href="https://{}.deviantart.com/badges/{}">[proof]</a><br>'
               .format(num, dev_name, counts['Given'], counts['Received'], dev_name, '' if badges else 'llama/'))
         else:
             print('{}. @{} {:,} badges sent, {:,} badges received<br>'
@@ -532,33 +533,70 @@ def sigint_handler(signum, frame):
     print_stats()
     sys.exit()
 
-DATA_PATH = 'Data/'
-COOKIES_PATH = DATA_PATH + 'Cookies/'
-TRANSACTIONS_PATH = DATA_PATH + 'LlamaTransactions/'
+args = docopt(__doc__)
+OS = [
+    'Windows NT 6.3; WOW64',
+    'Windows NT 6.3; Win64; x64',
+    'Windows NT 6.2',
+    'Windows NT 6.1',
+    'Macintosh; Intel Mac OS X 10_10_3',
+    'Macintosh; Intel Mac OS X 10_11_1',
+    'Macintosh; Intel Mac OS X 10_12_6',
+    'Macintosh; Intel Mac OS X 10_13_0'
+]
+USER_AGENTS = [
+    'Mozilla/5.0 (%s) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.78 Safari/537.36',
+    'Mozilla/5.0 (%s) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36',
+    'Mozilla/5.0 (%s) Gecko/20100101 Firefox/51.0',
+    'Mozilla/5.0 (%s) Gecko/20100101 Firefox/52.0',
+    'Mozilla/5.0 (%s) Gecko/20100101 Firefox/53.0',
+    'Mozilla/5.0 (%s) Gecko/20100101 Firefox/54.0'
+]
+SPAM_FILTER_START_WAIT = 60*30 # 30 minutes
+SPAM_FILTER_EACH_WAIT = 0
+LLAMA_TRADE_WAIT = 120
 
-def save_data():
-    global username
-    for d in [COOKIES_PATH, TRANSACTIONS_PATH]:
-        if not os.path.exists(d):
-            os.makedirs(d)
-    with open(COOKIES_PATH + username + '.pickle', 'wb') as f:
-        pickle.dump(dA.cookies, f, pickle.HIGHEST_PROTOCOL)
-    LlamaTransactions.update(read_llama_transactions())
-    with bz2.BZ2File(TRANSACTIONS_PATH + username + '.json.bz2', 'w') as f:
-        json.dump(list(LlamaTransactions), f, separators=(',', ':'))
-    print_stats()
+VERBOSE = args['-v']
+username, password = args['<username>'], args['<password>']
+
+os.chdir(os.path.dirname(os.path.realpath(sys.argv[0])))
+DATA_DIRPATH = 'Data' if os.path.exists('Data') else os.path.expanduser('~/.dAbot')
+
+COOKIES_DIRPATH = os.path.join(DATA_DIRPATH, 'Cookies')
+TRANSACTIONS_DIR_PATH = os.path.join(DATA_DIRPATH, 'LlamaTransactions')
+COOKIE_PATH = os.path.join(COOKIES_DIRPATH, username + '.pickle')
+LLAMA_TRANSACTIONS_PATH = os.path.join(TRANSACTIONS_DIR_PATH, username + '.json.bz2')
 
 def read_llama_transactions():
-    if os.path.isfile(TRANSACTIONS_PATH + username + '.json.bz2'):
-        with bz2.BZ2File(TRANSACTIONS_PATH + username + '.json.bz2', 'r') as f:
+    if os.path.isfile(LLAMA_TRANSACTIONS_PATH):
+        with bz2.BZ2File(LLAMA_TRANSACTIONS_PATH, 'r') as f:
             return set(json.load(f))
     return set()
+def save_llama_transactions():
+    with bz2.BZ2File(LLAMA_TRANSACTIONS_PATH, 'w') as f:
+        json.dump(list(LlamaTransactions), f, separators=(',', ':'))
+def read_cookies():
+    if os.path.isfile(COOKIE_PATH):
+        with open(COOKIE_PATH, 'rb') as f:
+            dA.cookies = pickle.load(f)
+def save_cookies():
+    with open(COOKIE_PATH, 'wb') as f:
+        pickle.dump(dA.cookies, f, pickle.HIGHEST_PROTOCOL)
+
+def save_data():
+    for d in [COOKIES_DIRPATH, TRANSACTIONS_DIR_PATH]:
+        if not os.path.exists(d):
+            os.makedirs(d)
+    save_cookies()
+    LlamaTransactions.update(read_llama_transactions())
+    save_llama_transactions()
+    print_stats()
 
 def load_data():
-    global LlamaTransactions, username
-    if os.path.isfile(COOKIES_PATH + username + '.pickle'):
-        with open(COOKIES_PATH + username + '.pickle', 'rb') as f:
-            dA.cookies = pickle.load(f)
+    global LlamaTransactions
+    if VERBOSE:
+        echo('Data Directory Path: %s' % DATA_DIRPATH)
+    read_cookies()
     LlamaTransactions = read_llama_transactions()
     print_stats.transactions_count = len(LlamaTransactions)
     echo('[Llama Transactions] %d' % len(LlamaTransactions))
@@ -592,28 +630,6 @@ else:
             self._title = value
     console = Console()
 
-OS = [
-    'Windows NT 6.3; WOW64',
-    'Windows NT 6.3; Win64; x64',
-    'Windows NT 6.2',
-    'Windows NT 6.1',
-    'Macintosh; Intel Mac OS X 10_10_3'
-]
-USER_AGENTS = [
-    'Mozilla/5.0 (%s) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/36.0.1985.143 Safari/537.36',
-    'Mozilla/5.0 (%s) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2049.0 Safari/537.36',
-    'Mozilla/5.0 (%s) Gecko/20100101 Firefox/33.0',
-    'Mozilla/5.0 (%s) Gecko/20100101 Firefox/34.0',
-    'Mozilla/5.0 (%s) Gecko/20100101 Firefox/35.0',
-    'Mozilla/5.0 (%s) Gecko/20100101 Firefox/36.0'
-]
-SPAM_FILTER_START_WAIT = 60*30 # 30 minutes
-SPAM_FILTER_EACH_WAIT = 0
-LLAMA_TRADE_WAIT = 120
-
-args = docopt(__doc__)
-VERBOSE = args['-v']
-
 def header_size(headers):
     return sum(len(key) + len(value) + 4 for key, value in headers.items()) + 2
 
@@ -644,25 +660,34 @@ def retry_if_network_error(exception):
 
 def pick_da_useragent():
     dA.headers['User-Agent'] = random.choice(USER_AGENTS) % random.choice(OS)
+    if VERBOSE:
+        echo('[User-Agent] %s' % dA.headers['User-Agent'])
 
 dA = requests.session()
 req = requests.session()
+PROXIED = False
 for _ in [dA, req]:
     _.trust_env = False
     _.hooks = {'response': response_hook}
-    _.headers['Accept-Encoding'] = 'gzip,deflate'
+    _.headers['Accept'] = '*/*'
+    _.headers['Accept-Encoding'] = 'gzip, deflate'
+    _.headers['Accept-Language'] = 'en'
+    if PROXIED:
+        _.proxies = {
+          'http': '127.0.0.1:8080',
+          'https': '127.0.0.1:8080'
+        }
+        _.verify = False
+
 LlamaTransactions = set()
 
 def init():
-    global username, password
-    username, password = args['<username>'], args['<password>']
     pick_da_useragent()
-    os.chdir(os.path.dirname(os.path.realpath(sys.argv[0])))
     atexit.register(save_data)
     load_data()
 
 @retry(wait_exponential_multiplier=1*60*1000, retry_on_exception=retry_if_network_error)
-def main():
+def run():
     if not is_logged_in(username):
         if not login(username, password):
             sys.exit()
@@ -798,6 +823,9 @@ def main():
         print(code)
         exec(code)
 
-if __name__ == '__main__':
+def main():
     init()
+    run()
+
+if __name__ == '__main__':
     main()
