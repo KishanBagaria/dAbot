@@ -44,14 +44,17 @@ dAbot <username> <password> [-v] save       dev_ids       <dev_names_file_path> 
 
 ### How to bypass bot detection
 
-At some point you might get an error message due to DeviantArt detecting automated tools (i.e. bot usage).  
-This is a recent security measure that Wix -- the parent company of DeviantArt -- has introduced in the website, in order to prevent bots from logging in.
+At some point, you might get an error message saying that **DeviantArt has detected automated logins** and/or bot usage when trying to login.  
+This is because DeviantArt doesn't like bots, and will try to block login access to the website if it detectes that automated tools are being used.  
+This is a recent security measure that _Wix_ -- the parent company of DeviantArt -- has introduced in order to prevent bots from accessing the website.  
 
-In order to continue using dAbot, you need to provide a special kind of token that can be acquired by solving a captcha.  The method was discovered by [DRSDavidSoft](https://github.com/DRSDavidSoft), and you need to install a userscript to acquire the response token.  
+If the issue seems to continue, you can choose to bypass it by providing a special kind of _token_ to dAbot.  The token can be acquired by installing a userscript and solving a captcha.
 
-The instructions are provided at this page:  https://deviantart.com/perimeterx
+The instructions to install the userscript and solving the captcha are available here:  https://deviantart.com/perimeterx  
 
-Once you solve the captcha, you'll be able to login to your account using dAbot.
+Once you solve the captcha and provide the results to dAbot, you'll be able to instantly regain login access to your account.
+
+This method was discovered and introduced by [DRSDavidSoft](https://github.com/DRSDavidSoft).
 
 ## Disclaimer
 
