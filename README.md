@@ -6,7 +6,7 @@ CLI tool to automate stuff on DeviantArt.com
 
 1. [Install Python 2](https://www.python.org/downloads/),
    and make sure Python is added to `PATH`.  
-   (On Windows and you should make sure that the "Add in PATH" option in installation is checked.)
+   (On Windows you need to check the "Add in PATH" option in the installation.)
 2. Open Terminal/Command Prompt and enter: `pip install dAbot`  
     If that doesn't work, try `python -m pip install dAbot`  
     If that doesn't work either, make sure Python is installed correctly and added to `PATH`.
