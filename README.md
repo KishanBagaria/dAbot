@@ -4,17 +4,19 @@ CLI tool to automate stuff on DeviantArt.com
 
 ## Installation
 
-1. [Install Python 2](https://www.python.org/downloads/)
-2. Open Terminal/Command Prompt and enter `pip install dAbot`  
+1. [Install Python 2](https://www.python.org/downloads/),
+   and make sure Python is added to `PATH`.  
+   (On Windows and you should make sure that the "Add in PATH" option in installation is checked.)
+2. Open Terminal/Command Prompt and enter: `pip install dAbot`  
     If that doesn't work, try `python -m pip install dAbot`  
-    If that doesn't work either, you're likely using Windows and you should reinstall Python making sure that the "Add in PATH" option is checked.
+    If that doesn't work either, make sure Python is installed correctly and added to `PATH`.
 3. Once dAbot is installed, you can use any of the commands listed below by entering them in Terminal/Command Prompt.
 
 To upgrade it later, run `pip install dAbot --upgrade`
 
 ## Usage
 
-```
+```batch
 dAbot <username> <password> [-v] llama      give          random        (deviants|groups|exchangers)
 dAbot <username> <password> [-v] llama      give          msgs          (activity|replies)           [--trash_msgs]
 dAbot <username> <password> [-v] llama      give          file          (dev_names|dev_ids)          <file_path>
