@@ -144,6 +144,9 @@ def log(file_name, text):
         with open(file_name, 'ab') as f:
             f.write(text.encode('utf-8'))
 
+def strip_html(html, rep = '\n'):
+    return re.sub('\s*<[\/\s]*?span[^\<\>]*?>\s*', rep, html).strip()
+
 attrs = ['years', 'months', 'days', 'hours', 'minutes', 'seconds']
 def human_readable(delta):
     for attr in attrs:
@@ -209,7 +212,7 @@ def get_dev_id(dev_name):
 
 def solve_recaptcha(uuid):
     response = ''
-    echo('DeviantArt has detected bot usage')
+    echo(Fore.YELLOW + 'DeviantArt has detected bot usage')
     echo(Style.DIM + 'You need to acquire a special token from this page:')
     echo(Fore.YELLOW + '{url}'.format(url='https://perimeterx.deviantart.com'))
     while not response:
@@ -242,7 +245,8 @@ def login(username, password):
         r = re.search('uuid=([^?&]*)&?', post.url.lower())
         if r:
             uuid = r.group(1)
-            echo(Fore.YELLOW + 'found uuid: ' + uuid)
+            if VERBOSE:
+                echo(Fore.YELLOW + 'found uuid: ' + uuid)
             if not solve_recaptcha(uuid):
                 echo(Fore.RED + 'Solving challenge failed!')
             else:
@@ -250,8 +254,10 @@ def login(username, password):
                 login(username, password)
     else:
         r = re.search(regex['login_error'], post_html)
+        if r:
+            reason = strip_html(r.group(1), '\n')
+        echo(Fore.RED + 'Login failed, reason: {}'.format(reason or 'unspecified'))
         log('login_error.htm', post_html)
-        echo(Fore.RED + 'Login failed, reason: {}'.format(r.group(1) or 'unspecified'))
         echo(Back.RED + post.url)
 
 def is_logged_in(username):
