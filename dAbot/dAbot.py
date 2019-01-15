@@ -101,7 +101,8 @@ regex = {
     'title'                : '<title>(.+?)</title>',
     'devname_title'        : '<title>(.+?)&#039;s badges.+</title>',
     'group_last_offset'    : '\.\.\.</a></li><li class="number"><a class="away" data-offset="(\d+)"',
-    'user_comment_time'    : 'User Comments.+?<span class="side">(.+?)</span>'
+    'user_comment_time'    : 'User Comments.+?<span class="side">(.+?)</span>',
+    'login_error'          : '<span .*?class="error-message".*?>(.+?)</span>'
 }
 
 url = {
@@ -121,7 +122,8 @@ url = {
     'process_trade_ref'   : 'https://www.deviantart.com/',
     'msg_center'          : 'https://www.deviantart.com/notifications/',
     'login'               : 'https://www.deviantart.com/users/login',
-    'logout'              : 'https://www.deviantart.com/users/logout'
+    'logout'              : 'https://www.deviantart.com/users/logout',
+    'pxcaptcha'           : 'https://www.deviantart.com/users/wrong-password?url=%%2fusers%%2flogin&uuid=%s&vid='
 }
 
 printed_dates = []
@@ -137,8 +139,13 @@ def echo(message):
     print(Style.BRIGHT + get_datetime_now() + '   ' + message + Style.RESET_ALL)
 
 def log(file_name, text):
-    with open(file_name, 'ab') as f:
-        f.write(text.encode('utf-8'))
+    if VERBOSE:
+        echo(Fore.RED + 'Saving the dump to {}'.format(file_name))
+        with open(file_name, 'ab') as f:
+            f.write(text.encode('utf-8'))
+
+def strip_html(html, rep = '\n'):
+    return re.sub('\s*<[\/\s]*?span[^\<\>]*?>\s*', rep, html).strip()
 
 attrs = ['years', 'months', 'days', 'hours', 'minutes', 'seconds']
 def human_readable(delta):
@@ -172,13 +179,19 @@ def get_relative_time_in_mins(relative_time):
 def get_validate_token(html):
     r = re.search(regex['validate_token'], html)
     if not r:
-        print(html)
+        echo(Fore.RED + 'Validate Token Absent')
+        if VERBOSE:
+            echo(html)
+        return ''
     return r.group(1)
 
 def get_validate_key(html):
     r = re.search(regex['validate_key'], html)
     if not r:
-        print(html)
+        echo(Fore.RED + 'Validate Key Absent')
+        if VERBOSE:
+            echo(html)
+        return ''
     return r.group(1)
 
 def get_title(html):
@@ -197,6 +210,20 @@ def get_dev_id(dev_name):
     dev_id = re.search(regex['give_menu_json_dev_id'], difi_json).group(1)
     return dev_id
 
+def solve_recaptcha(uuid):
+    response = ''
+    echo(Fore.YELLOW + 'DeviantArt has detected bot usage')
+    echo(Style.DIM + 'You need to acquire a special token from this page:')
+    echo(Fore.YELLOW + '{url}'.format(url='https://perimeterx.deviantart.com'))
+    while not response:
+        response = input('Please enter a reCAPTCHA token to continue: ').strip()
+    dA.headers.update({'referer': url['pxcaptcha'] % uuid})
+    params = [response, uuid, 'null']
+    post = dA.get(url['login'], cookies={'_pxCaptcha': ':'.join(params)})
+    if (VERBOSE):
+        pprint.pprint(post)
+    return 'Please confirm you are human.' not in post.text
+
 def login(username, password):
     echo('Downloading login page')
     login_html = dA.get(url['login']).text
@@ -214,13 +241,28 @@ def login(username, password):
     if '"loggedIn":true' in post_html:
         echo('Logged in as ' + username)
         return True
+    elif 'Please confirm you are human.' in post_html:
+        r = re.search('uuid=([^?&]*)&?', post.url.lower())
+        if r:
+            uuid = r.group(1)
+            if VERBOSE:
+                echo(Fore.YELLOW + 'found uuid: ' + uuid)
+            if not solve_recaptcha(uuid):
+                echo(Fore.RED + 'Solving challenge failed!')
+            else:
+                echo(Fore.GREEN + 'Solving challenge was successful!')
+                login(username, password)
     else:
+        r = re.search(regex['login_error'], post_html)
+        if r:
+            reason = strip_html(r.group(1), '\n')
+        echo(Fore.RED + 'Login failed, reason: {}'.format(reason or 'unspecified'))
         log('login_error.htm', post_html)
         echo(Back.RED + post.url)
 
 def is_logged_in(username):
     echo('Checking if logged in as ' + username)
-    return dA.head(url['me_profile']).headers.get('Location').lower() == 'https://' + username.lower() + '.deviantart.com/'
+    return username.lower() in dA.head(url['me_profile']).headers.get('Location').lower()
 
 def logout():
     echo('Logging out %s from all sessions' % username)
@@ -677,7 +719,7 @@ for _ in [dA, req]:
           'http': '127.0.0.1:8080',
           'https': '127.0.0.1:8080'
         }
-        _.verify = False
+        _.verify = True
 
 LlamaTransactions = set()
 
