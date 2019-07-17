@@ -46,7 +46,17 @@ try:
 except ImportError:
     import pickle
 
+try:
+    from urlparse import urlparse
+except ImportError:
+    import urllib.parse
+try:
+    from httplib import HTTPException
+except ImportError:
+    from http.client import HTTPException
+
 import sys
+IS_PYTHON_3 = sys.version_info >= (3, 0)
 
 def except_hook(type, value, traceback):
     sys.__excepthook__(type, value, traceback)
@@ -63,12 +73,10 @@ import atexit
 import ctypes
 import signal
 import urllib
-import urlparse
 import datetime
 import random
 import bz2
 import socket
-import httplib
 import pprint
 
 import requests
@@ -683,16 +691,21 @@ LlamaTransactions = set()
 
 def init():
     pick_da_useragent()
-    atexit.register(save_data)
+    # TODO
+    if not IS_PYTHON_3: atexit.register(save_data)
     load_data()
 
 @retry(wait_exponential_multiplier=1*60*1000, retry_on_exception=retry_if_network_error)
 def run():
-    if not is_logged_in(username):
-        if not login(username, password):
-            sys.exit()
+    login_required = not args['hof']
+    if login_required:
+        if not is_logged_in(username):
+            if not login(username, password):
+                sys.exit()
+        else:
+            echo('Already logged in as ' + username)
     else:
-        echo('Already logged in as ' + username)
+        echo('Skipping login')
 
     console.title = 'dAbot | ' + username
 
