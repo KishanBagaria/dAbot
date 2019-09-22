@@ -41,22 +41,20 @@ try:
     input = raw_input
 except NameError:
     pass
-try:
-    import cPickle as pickle
-except ImportError:
-    import pickle
-
-try:
-    from urlparse import urlparse
-except ImportError:
-    import urllib.parse
-try:
-    from httplib import HTTPException
-except ImportError:
-    from http.client import HTTPException
 
 import sys
 IS_PYTHON_3 = sys.version_info >= (3, 0)
+
+if IS_PYTHON_3:
+    from http.client import HTTPException
+    from http.cookiejar import MozillaCookieJar
+    import urllib.parse
+    import pickle
+else:
+    from httplib import HTTPException
+    from cookielib import MozillaCookieJar
+    from urlparse import urlparse
+    import cPickle as pickle
 
 def except_hook(type, value, traceback):
     sys.__excepthook__(type, value, traceback)
@@ -661,7 +659,7 @@ class DAThrottlingError(RequestException):
 
 def retry_if_network_error(exception):
     pick_da_useragent()
-    do_retry = isinstance(exception, (requests.exceptions.RequestException, httplib.HTTPException, socket.error))
+    do_retry = isinstance(exception, (requests.exceptions.RequestException, HTTPException, socket.error))
     if do_retry:
         echo(Fore.YELLOW + 'Retrying... ' + repr(exception))
     return do_retry
@@ -673,6 +671,9 @@ def pick_da_useragent():
 
 dA = requests.session()
 req = requests.session()
+cj = MozillaCookieJar(password)
+cj.load()
+
 PROXIED = False
 for _ in [dA, req]:
     _.trust_env = False
@@ -680,6 +681,7 @@ for _ in [dA, req]:
     _.headers['Accept'] = '*/*'
     _.headers['Accept-Encoding'] = 'gzip, deflate'
     _.headers['Accept-Language'] = 'en'
+    _.cookies = cj
     if PROXIED:
         _.proxies = {
           'http': '127.0.0.1:8080',
@@ -697,7 +699,7 @@ def init():
 
 @retry(wait_exponential_multiplier=1*60*1000, retry_on_exception=retry_if_network_error)
 def run():
-    login_required = not args['hof']
+    login_required = False # not args['hof']
     if login_required:
         if not is_logged_in(username):
             if not login(username, password):
