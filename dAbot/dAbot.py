@@ -48,7 +48,7 @@ IS_PYTHON_3 = sys.version_info >= (3, 0)
 if IS_PYTHON_3:
     from http.client import HTTPException
     from http.cookiejar import MozillaCookieJar
-    import urllib.parse
+    from urllib.parse import urlparse
     import pickle
 else:
     from httplib import HTTPException
@@ -111,20 +111,20 @@ regex = {
 }
 
 url = {
-    'badges_page'         : 'https://%s.deviantart.com/badges/',
-    'llama_page'          : 'https://%s.deviantart.com/badges/llama/',
-    'group_member_list'   : 'https://%s.deviantart.com/modals/memberlist/?offset=%d',
-    'activity'            : 'https://%s.deviantart.com/activity/',
-    'me_profile'          : 'https://me.deviantart.com/',
+    'badges_page'         : 'https://www.deviantart.com/%s/badges/',
+    'llama_page'          : 'https://www.deviantart.com/%s/badges/llama/',
+    'group_member_list'   : 'https://www.deviantart.com/%s/modals/memberlist/?offset=%d',
+    'activity'            : 'https://www.deviantart.com/%s/activity/',
+    'me_profile'          : 'https://www.deviantart.com/me',
     'llama_trade'         : 'https://llamatrade.deviantart.com/',
     'random'              : 'https://www.deviantart.com/random/',
     'login_ref'           : 'https://www.deviantart.com/users/loggedin',
     'difi_get'            : 'https://www.deviantart.com/global/difi/?t=json&c[]=',
     'difi_post'           : 'https://www.deviantart.com/global/difi/',
     'points'              : 'https://www.deviantart.com/account/points/',
-    'llama_give'          : 'https://www.deviantart.com/modal/badge/give?badgetype=llama&referrer=https://deviantart.com&to_user=',
+    'llama_give'          : 'https://www.deviantart.com/modal/badge/give?badgetype=llama&referrer=https://www.deviantart.com&to_user=',
     'process_trade'       : 'https://www.deviantart.com/modal/badge/process_trade',
-    'process_trade_ref'   : 'https://www.deviantart.com/',
+    'process_trade_ref'   : 'https://www.deviantart.com',
     'msg_center'          : 'https://www.deviantart.com/notifications/',
     'login'               : 'https://www.deviantart.com/users/login',
     'logout'              : 'https://www.deviantart.com/users/logout'
@@ -194,8 +194,8 @@ def get_redirected_url(url):
     return req.head(url).headers['Location']
 
 def get_random(what):
-    parsed = urlparse.urlparse(get_redirected_url(url['random'] + what))
-    return parsed.hostname.split('.')[0]
+    parsed = urlparse(get_redirected_url(url['random'] + what))
+    return parsed.path.split('/')[1]
 
 def get_dev_id(dev_name):
     dev_name = dev_name.lower()
@@ -541,22 +541,14 @@ def sigint_handler(signum, frame):
 
 args = docopt(__doc__)
 OS = [
-    'Windows NT 6.3; WOW64',
-    'Windows NT 6.3; Win64; x64',
-    'Windows NT 6.2',
-    'Windows NT 6.1',
-    'Macintosh; Intel Mac OS X 10_10_3',
-    'Macintosh; Intel Mac OS X 10_11_1',
-    'Macintosh; Intel Mac OS X 10_12_6',
-    'Macintosh; Intel Mac OS X 10_13_0'
+    # 'Windows NT 6.3; WOW64',
+    # 'Windows NT 6.2',
+    # 'Windows NT 6.1',
+    'Macintosh; Intel Mac OS X 10_14_5'
 ]
 USER_AGENTS = [
-    'Mozilla/5.0 (%s) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.78 Safari/537.36',
-    'Mozilla/5.0 (%s) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36',
-    'Mozilla/5.0 (%s) Gecko/20100101 Firefox/51.0',
-    'Mozilla/5.0 (%s) Gecko/20100101 Firefox/52.0',
-    'Mozilla/5.0 (%s) Gecko/20100101 Firefox/53.0',
-    'Mozilla/5.0 (%s) Gecko/20100101 Firefox/54.0'
+    # 'Mozilla/5.0 (%s) Gecko/20100101 Firefox/54.0',
+    'Mozilla/5.0 (%s) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Safari/537.36'
 ]
 SPAM_FILTER_START_WAIT = 60*30 # 30 minutes
 SPAM_FILTER_EACH_WAIT = 0
@@ -681,7 +673,8 @@ for _ in [dA, req]:
     _.headers['Accept'] = '*/*'
     _.headers['Accept-Encoding'] = 'gzip, deflate'
     _.headers['Accept-Language'] = 'en'
-    _.cookies = cj
+    cookies = ['%s=%s' % (c.name, c.value) for c in cj]
+    _.headers['Cookie'] = ';'.join(cookies)
     if PROXIED:
         _.proxies = {
           'http': '127.0.0.1:8080',
