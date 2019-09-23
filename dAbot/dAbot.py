@@ -537,12 +537,11 @@ LLAMA_TRADE_WAIT = 120
 VERBOSE = args['-v']
 cookies_txt_path = args['<cookies_txt_path>']
 
-cj = MozillaCookieJar(cookies_txt_path)
-cj.load()
-COOKIE_DICT = requests.utils.dict_from_cookiejar(cj)
+cookie_jar = MozillaCookieJar(cookies_txt_path)
+cookie_jar.load()
+COOKIE_DICT = requests.utils.dict_from_cookiejar(cookie_jar)
 USER_INFO = unquote(COOKIE_DICT['userinfo'])
 USERNAME = json.loads(USER_INFO.split(';')[1])['username']
-cookie_jar = requests.utils.cookiejar_from_dict(COOKIE_DICT)
 
 os.chdir(os.path.dirname(os.path.realpath(sys.argv[0])))
 DATA_DIRPATH = 'Data' if os.path.exists('Data') else os.path.expanduser('~/.dAbot')
@@ -565,6 +564,7 @@ def save_data():
         if not os.path.exists(d):
             os.makedirs(d)
     LlamaTransactions.update(read_llama_transactions())
+    cookie_jar.save()
     save_llama_transactions()
     print_stats()
 
