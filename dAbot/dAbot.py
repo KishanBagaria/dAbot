@@ -6,41 +6,32 @@ https://kishan-bagaria.deviantart.com/
 https://kishanbagaria.com/
 
 Usage:
-  dAbot <username> <password> [-v] llama      give          random        (deviants|groups|exchangers)
-  dAbot <username> <password> [-v] llama      give          msgs          (activity|replies)           [--trash_msgs]
-  dAbot <username> <password> [-v] llama      give          file          (dev_names|dev_ids)          <file_path>
-  dAbot <username> <password> [-v] llama      give          group_members <group>                      [--reversed]
-  dAbot <username> <password> [-v] llama      give          url           <url>
-  dAbot <username> <password> [-v] llama      give          traders
-  dAbot <username> <password> [-v] llama      give          traders_random
-  dAbot <username> <password> [-v] llama      give          <deviant>
-  dAbot <username> <password> [-v] points     give          <deviant>     <amount>                     [<message>]
-  dAbot <username> <password> [-v] points     balance
-  dAbot <username> <password> [-v] devwatch   (add|remove)  <deviant>
-  dAbot <username> <password> [-v] msgs       trash         (activity|bulletins|notices|replies|comments)
-  dAbot <username> <password> [-v] comment    <deviant>     <comment>
-  dAbot <username> <password> [-v] logout
-  dAbot <username> <password> [-v] exec       <code>
-  dAbot <username> <password> [-v] llama      stats         <deviant>
-  dAbot <username> <password> [-v] llama      hof           group         <group_name> [--reversed]
-  dAbot <username> <password> [-v] llama      hof           file          <file_path>
-  dAbot <username> <password> [-v] llama      hof           <deviant_names>...
-  dAbot <username> <password> [-v] badges     hof           <deviant_names>...
-  dAbot <username> <password> [-v] save       random        (deviants|groups|exchangers)               <quantity>
-  dAbot <username> <password> [-v] save       group_members <group>
-  dAbot <username> <password> [-v] save       dev_ids       <dev_names_file_path>                      [--if_llama_given]
+  dAbot <cookies_txt_path> [-v] llama      give          random        (deviants|groups|exchangers)
+  dAbot <cookies_txt_path> [-v] llama      give          msgs          (activity|replies)           [--trash_msgs]
+  dAbot <cookies_txt_path> [-v] llama      give          file          (dev_names|dev_ids)          <file_path>
+  dAbot <cookies_txt_path> [-v] llama      give          group_members <group>                      [--reversed]
+  dAbot <cookies_txt_path> [-v] llama      give          url           <url>
+  dAbot <cookies_txt_path> [-v] llama      give          traders
+  dAbot <cookies_txt_path> [-v] llama      give          traders_random
+  dAbot <cookies_txt_path> [-v] llama      give          <deviant>
+  dAbot <cookies_txt_path> [-v] points     give          <deviant>     <amount>                     [<message>]
+  dAbot <cookies_txt_path> [-v] points     balance
+  dAbot <cookies_txt_path> [-v] devwatch   (add|remove)  <deviant>
+  dAbot <cookies_txt_path> [-v] msgs       trash         (activity|bulletins|notices|replies|comments)
+  dAbot <cookies_txt_path> [-v] comment    <deviant>     <comment>
+  dAbot <cookies_txt_path> [-v] logout
+  dAbot <cookies_txt_path> [-v] exec       <code>
+  dAbot <cookies_txt_path> [-v] llama      stats         <deviant>
+  dAbot <cookies_txt_path> [-v] llama      hof           group         <group_name> [--reversed]
+  dAbot <cookies_txt_path> [-v] llama      hof           file          <file_path>
+  dAbot <cookies_txt_path> [-v] llama      hof           <deviant_names>...
+  dAbot <cookies_txt_path> [-v] badges     hof           <deviant_names>...
+  dAbot <cookies_txt_path> [-v] save       random        (deviants|groups|exchangers)               <quantity>
+  dAbot <cookies_txt_path> [-v] save       group_members <group>
+  dAbot <cookies_txt_path> [-v] save       dev_ids       <dev_names_file_path>                      [--if_llama_given]
 """
 
 from __future__ import division
-
-try:
-    import sets
-except ImportError:
-    pass
-try:
-    input = raw_input
-except NameError:
-    pass
 
 import sys
 IS_PYTHON_3 = sys.version_info >= (3, 0)
@@ -48,12 +39,16 @@ IS_PYTHON_3 = sys.version_info >= (3, 0)
 if IS_PYTHON_3:
     from http.client import HTTPException
     from http.cookiejar import MozillaCookieJar
-    from urllib.parse import urlparse
+    from urllib.parse import urlparse, unquote
     import pickle
+    xrange = range
 else:
+    input = raw_input
+    import sets
     from httplib import HTTPException
     from cookielib import MozillaCookieJar
     from urlparse import urlparse
+    from urllib import unquote
     import cPickle as pickle
 
 def except_hook(type, value, traceback):
@@ -115,7 +110,7 @@ url = {
     'llama_page'          : 'https://www.deviantart.com/%s/badges/llama/',
     'group_member_list'   : 'https://www.deviantart.com/%s/modals/memberlist/?offset=%d',
     'activity'            : 'https://www.deviantart.com/%s/activity/',
-    'me_profile'          : 'https://www.deviantart.com/me',
+    'me_profile'          : 'https://www.deviantart.com/me/',
     'llama_trade'         : 'https://llamatrade.deviantart.com/',
     'random'              : 'https://www.deviantart.com/random/',
     'login_ref'           : 'https://www.deviantart.com/users/loggedin',
@@ -142,7 +137,8 @@ def get_datetime_now():
 def echo(message):
     print(Style.BRIGHT + get_datetime_now() + '   ' + message + Style.RESET_ALL)
 
-def log(file_name, text):
+def log_html(file_name, text):
+    echo(Fore.RED + 'Saving HTML dump to {}'.format(file_name))
     with open(file_name, 'ab') as f:
         f.write(text.encode('utf-8'))
 
@@ -178,13 +174,17 @@ def get_relative_time_in_mins(relative_time):
 def get_validate_token(html):
     r = re.search(regex['validate_token'], html)
     if not r:
-        print(html)
+        echo(Fore.RED + 'Validate Token Absent')
+        if VERBOSE:
+            print(html)
     return r.group(1)
 
 def get_validate_key(html):
     r = re.search(regex['validate_key'], html)
     if not r:
-        print(html)
+        echo(Fore.RED + 'Validate Key Absent')
+        if VERBOSE:
+            print(html)
     return r.group(1)
 
 def get_title(html):
@@ -203,30 +203,11 @@ def get_dev_id(dev_name):
     dev_id = re.search(regex['give_menu_json_dev_id'], difi_json).group(1)
     return dev_id
 
-def login(username, password):
-    echo('Downloading login page')
-    login_html = dA.get(url['login']).text
-    params = {
-        'ref'            : url['login_ref'],
-        'username'       : username,
-        'password'       : password,
-        'remember_me'    : 1,
-        'validate_token' : get_validate_token(login_html),
-        'validate_key'   : get_validate_key(login_html)
-    }
-    echo('Logging in as %s' % username)
-    post = dA.post(url['login'], data=params)
-    post_html = post.text
-    if '"loggedIn":true' in post_html:
-        echo('Logged in as ' + username)
-        return True
-    else:
-        log('login_error.htm', post_html)
-        echo(Back.RED + post.url)
-
 def is_logged_in(username):
     echo('Checking if logged in as ' + username)
-    return dA.head(url['me_profile']).headers.get('Location').lower() == 'https://' + username.lower() + '.deviantart.com/'
+    location = dA.head(url['me_profile']).headers.get('Location')
+    if VERBOSE: print('Me profile link redirected to', location)
+    return location.lower() == 'https://www.deviantart.com/' + username.lower()
 
 def logout():
     echo('Logging out %s from all sessions' % username)
@@ -250,7 +231,7 @@ def difi_unauth_get(cParam):
 
 def difi_post(cParam):
     params = {
-        'ui'  : urllib.unquote(dA.cookies['userinfo']),
+        'ui'  : USER_INFO,
         'c[]' : cParam,
         't'   : 'json'
     }
@@ -383,7 +364,7 @@ def give_llama(dev_id, trade_id=''):
     else:
         llama_counts['unknown'] += 1
         echo(Back.RED + '{:<5} {:<22} {}'.format(llama_counts['unknown'], dev_name, dev_id))
-        log('{} {} {} {}.htm'.format(get_datetime_now().replace(':', '.'), dev_id, dev_name, trade_id), process_html)
+        log_html('{} {} {} {}.htm'.format(get_datetime_now().replace(':', '.'), dev_id, dev_name, trade_id), process_html)
         error_msg = re.search(regex['llama_error_msg'], process_html)
         if error_msg:
             echo(Back.RED + error_msg.group(1))
@@ -555,15 +536,19 @@ SPAM_FILTER_EACH_WAIT = 0
 LLAMA_TRADE_WAIT = 120
 
 VERBOSE = args['-v']
-username, password = args['<username>'], args['<password>']
+cookies_txt_path = args['<cookies_txt_path>']
+
+cj = MozillaCookieJar(cookies_txt_path)
+cj.load()
+COOKIE_DICT = requests.utils.dict_from_cookiejar(cj)
+USER_INFO = unquote(COOKIE_DICT['userinfo'])
+USERNAME = json.loads(USER_INFO.split(';')[1])['username']
 
 os.chdir(os.path.dirname(os.path.realpath(sys.argv[0])))
 DATA_DIRPATH = 'Data' if os.path.exists('Data') else os.path.expanduser('~/.dAbot')
 
-COOKIES_DIRPATH = os.path.join(DATA_DIRPATH, 'Cookies')
 TRANSACTIONS_DIR_PATH = os.path.join(DATA_DIRPATH, 'LlamaTransactions')
-COOKIE_PATH = os.path.join(COOKIES_DIRPATH, username + '.pickle')
-LLAMA_TRANSACTIONS_PATH = os.path.join(TRANSACTIONS_DIR_PATH, username + '.json.bz2')
+LLAMA_TRANSACTIONS_PATH = os.path.join(TRANSACTIONS_DIR_PATH, USERNAME + '.json.bz2')
 
 def read_llama_transactions():
     if os.path.isfile(LLAMA_TRANSACTIONS_PATH):
@@ -572,20 +557,13 @@ def read_llama_transactions():
     return set()
 def save_llama_transactions():
     with bz2.BZ2File(LLAMA_TRANSACTIONS_PATH, 'w') as f:
-        json.dump(list(LlamaTransactions), f, separators=(',', ':'))
-def read_cookies():
-    if os.path.isfile(COOKIE_PATH):
-        with open(COOKIE_PATH, 'rb') as f:
-            dA.cookies = pickle.load(f)
-def save_cookies():
-    with open(COOKIE_PATH, 'wb') as f:
-        pickle.dump(dA.cookies, f, pickle.HIGHEST_PROTOCOL)
+        str = json.dumps(list(LlamaTransactions), separators=(',', ':'))
+        f.write(str.encode('utf-8'))
 
 def save_data():
-    for d in [COOKIES_DIRPATH, TRANSACTIONS_DIR_PATH]:
+    for d in [TRANSACTIONS_DIR_PATH]:
         if not os.path.exists(d):
             os.makedirs(d)
-    save_cookies()
     LlamaTransactions.update(read_llama_transactions())
     save_llama_transactions()
     print_stats()
@@ -594,7 +572,6 @@ def load_data():
     global LlamaTransactions
     if VERBOSE:
         echo('Data Directory Path: %s' % DATA_DIRPATH)
-    read_cookies()
     LlamaTransactions = read_llama_transactions()
     print_stats.transactions_count = len(LlamaTransactions)
     echo('[Llama Transactions] %d' % len(LlamaTransactions))
@@ -663,8 +640,6 @@ def pick_da_useragent():
 
 dA = requests.session()
 req = requests.session()
-cj = MozillaCookieJar(password)
-cj.load()
 
 PROXIED = False
 for _ in [dA, req]:
@@ -686,23 +661,18 @@ LlamaTransactions = set()
 
 def init():
     pick_da_useragent()
-    # TODO
-    if not IS_PYTHON_3: atexit.register(save_data)
+    atexit.register(save_data)
     load_data()
 
 @retry(wait_exponential_multiplier=1*60*1000, retry_on_exception=retry_if_network_error)
 def run():
-    login_required = False # not args['hof']
-    if login_required:
-        if not is_logged_in(username):
-            if not login(username, password):
-                sys.exit()
-        else:
-            echo('Already logged in as ' + username)
+    if not is_logged_in(USERNAME):
+        echo('Not logged in as %s. Export your cookies.txt file from the browser again' % USERNAME)
+        sys.exit()
     else:
-        echo('Skipping login')
+        echo('Logged in as ' + USERNAME)
 
-    console.title = 'dAbot | ' + username
+    console.title = 'dAbot | ' + USERNAME
 
     if   args['llama']:
         if   args['give']:
