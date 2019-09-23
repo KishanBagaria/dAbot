@@ -759,10 +759,10 @@ def run():
     elif args['comment']:
         if args['file']:
             with open(args['<file_path>']) as f:
-                    lines = f.read().splitlines()
-                echo(Fore.GREEN + '%d deviants' % len(lines))
-                for name in lines:
-                    profile_comment(name, args['<comment>'])
+                lines = f.read().splitlines()
+            echo(Fore.GREEN + '%d deviants' % len(lines))
+            for name in lines:
+                profile_comment(name, args['<comment>'])
         else:
             profile_comment(args['<deviant>'], args['<comment>'])
     elif args['logout']:
