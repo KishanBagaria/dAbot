@@ -190,7 +190,7 @@ def get_title(html):
     return re.search(regex['title'], html).group(1)
 
 def get_redirected_url(url):
-    return req.head(url).headers['Location']
+    return dA.head(url).headers['Location']
 
 def get_random(what):
     parsed = urlparse(get_redirected_url(url['random'] + what))
@@ -220,7 +220,7 @@ def validate_response(difi_json, cParam):
     return difi_json
 
 def _difi_get(req, cParam):
-    return validate_response(req.get(url['difi_get'] + cParam).text, cParam)
+    return validate_response(dA.get(url['difi_get'] + cParam).text, cParam)
 
 def difi_get(cParam):
     return _difi_get(dA, cParam)
@@ -251,7 +251,7 @@ def get_last_user_comment_time(dev_name):
         echo(Fore.RED + re.search(regex['title'], activity_html).group(1))
 
 def get_llama_stats(dev_name):
-    llama_html = req.get(url['llama_page'] % dev_name).text
+    llama_html = dA.get(url['llama_page'] % dev_name).text
     if 'Llamas are awesome!' not in llama_html:
         return {'Received': 0, 'Given': 0}
     received_count = re.search(regex['received_llama_count'], llama_html).group(1).replace(',', '')
@@ -262,7 +262,7 @@ def get_llama_stats(dev_name):
     return {'Received': int(received_count), 'Given': int(given_count), 'HTML': llama_html, 'Name': dev_name}
 
 def get_badges_stats(dev_name):
-    badges_html = req.get(url['badges_page'] % dev_name).text
+    badges_html = dA.get(url['badges_page'] % dev_name).text
     counts = re.search(regex['badges_count'], badges_html)
     dev_name = re.search(regex['devname_title'], badges_html).group(1)
     given_count = counts.group(1).replace(',', '')
@@ -444,13 +444,13 @@ def get_msgs(msg_class):
     return json
 
 def get_group_members(group_name, reversed=False):
-    html           = req.get(url['group_member_list'] % (group_name, 0)).text
+    html           = dA.get(url['group_member_list'] % (group_name, 0)).text
     end_offset     = int(re.search(regex['group_last_offset'], html).group(1))
     reversed_offsets = xrange(end_offset, 0, -100)
     offsets          = xrange(0, end_offset, 100)
     for offset in (reversed_offsets if reversed else offsets):
         if offset != 0:
-            html = req.get(url['group_member_list'] % (group_name, offset)).text
+            html = dA.get(url['group_member_list'] % (group_name, offset)).text
         echo(Fore.GREEN + "Downloaded %s's member list from offset %d" % (group_name, offset))
         for d in get_dev_names(html):
             yield d
@@ -542,6 +542,7 @@ cj.load()
 COOKIE_DICT = requests.utils.dict_from_cookiejar(cj)
 USER_INFO = unquote(COOKIE_DICT['userinfo'])
 USERNAME = json.loads(USER_INFO.split(';')[1])['username']
+cookie_jar = requests.utils.cookiejar_from_dict(COOKIE_DICT)
 
 os.chdir(os.path.dirname(os.path.realpath(sys.argv[0])))
 DATA_DIRPATH = 'Data' if os.path.exists('Data') else os.path.expanduser('~/.dAbot')
@@ -638,17 +639,15 @@ def pick_da_useragent():
         echo('[User-Agent] %s' % dA.headers['User-Agent'])
 
 dA = requests.session()
-req = requests.session()
 
 PROXIED = False
-for _ in [dA, req]:
+for _ in [dA]:
     _.trust_env = False
     _.hooks = {'response': response_hook}
     _.headers['Accept'] = '*/*'
     _.headers['Accept-Encoding'] = 'gzip, deflate'
     _.headers['Accept-Language'] = 'en'
-    cookies = ['%s=%s' % (c.name, c.value) for c in cj]
-    _.headers['Cookie'] = ';'.join(cookies)
+    _.cookies = cookie_jar
     if PROXIED:
         _.proxies = {
           'http': '127.0.0.1:8080',
@@ -703,7 +702,7 @@ def run():
                 for m in get_group_members(args['<group>'], args['--reversed']):
                     give_llama_to_deviant(m)
             elif args['url']:
-                for m in get_dev_names(req.get(args['<url>']).text):
+                for m in get_dev_names(dA.get(args['<url>']).text):
                     give_llama_to_deviant(m)
             elif args['traders']:
                 last_echo = None
