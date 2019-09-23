@@ -19,6 +19,7 @@ Usage:
   dAbot <cookies_txt_path> [-v] devwatch   (add|remove)  <deviant>
   dAbot <cookies_txt_path> [-v] msgs       trash         (activity|bulletins|notices|replies|comments)
   dAbot <cookies_txt_path> [-v] comment    <deviant>     <comment>
+  dAbot <cookies_txt_path> [-v] comment    file          <file_path>   <comment>
   dAbot <cookies_txt_path> [-v] logout
   dAbot <cookies_txt_path> [-v] exec       <code>
   dAbot <cookies_txt_path> [-v] llama      stats         <deviant>
@@ -756,7 +757,14 @@ def run():
         elif args['replies']:   trash_msg_class('fb_replies')
         elif args['comments']:  trash_msg_class('comments')
     elif args['comment']:
-        profile_comment(args['<deviant>'], args['<comment>'])
+        if args['file']:
+            with open(args['<file_path>']) as f:
+                    lines = f.read().splitlines()
+                echo(Fore.GREEN + '%d deviants' % len(lines))
+                for name in lines:
+                    profile_comment(name, args['<comment>'])
+        else:
+            profile_comment(args['<deviant>'], args['<comment>'])
     elif args['logout']:
         logout()
     elif args['save']:
