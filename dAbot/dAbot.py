@@ -40,7 +40,6 @@ if IS_PYTHON_3:
     from http.client import HTTPException
     from http.cookiejar import MozillaCookieJar
     from urllib.parse import urlparse, unquote
-    import pickle
     xrange = range
 else:
     input = raw_input
@@ -49,7 +48,6 @@ else:
     from cookielib import MozillaCookieJar
     from urlparse import urlparse
     from urllib import unquote
-    import cPickle as pickle
 
 def except_hook(type, value, traceback):
     sys.__excepthook__(type, value, traceback)
