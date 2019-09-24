@@ -230,7 +230,7 @@ def difi_unauth_get(cParam):
 
 def difi_post(cParam):
     params = {
-        'ui'  : USER_INFO,
+        'ui'  : unquote(requests.utils.dict_from_cookiejar(cookie_jar)['userinfo']),
         'c[]' : cParam,
         't'   : 'json'
     }
