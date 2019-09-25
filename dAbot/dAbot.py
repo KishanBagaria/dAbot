@@ -154,10 +154,13 @@ def human_readable_file_size(num, suffix='B'):
     return "%.1f %s%s" % (num, 'Yi', suffix)
 
 def wait(seconds):
-    waiting_text = ' | Waiting %s' % ' '.join(human_readable(relativedelta(seconds=seconds)))
-    console.title += waiting_text
+    waiting_text = 'Waiting ' + ' '.join(human_readable(relativedelta(seconds=seconds)))
+    title_append = ' | ' + waiting_text
+    if VERBOSE:
+        echo(waiting_text)
+    console.title += title_append
     time.sleep(seconds)
-    console.title = console.title.replace(waiting_text, '')
+    console.title = console.title.replace(title_append, '')
 
 def get_relative_time_in_mins(relative_time):
     total_minutes = 0
@@ -205,7 +208,7 @@ def get_dev_id(dev_name):
 def is_logged_in(username):
     echo('Checking if logged in as ' + username)
     location = dA.head(url['me_profile']).headers.get('Location')
-    if VERBOSE: print('Me profile link redirected to', location)
+    if VERBOSE: echo('Me profile link redirected to', location)
     return location.lower() == 'https://www.deviantart.com/' + username.lower()
 
 def logout():
