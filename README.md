@@ -44,6 +44,9 @@ dAbot <cookies_txt_path> [-v] save       dev_ids       <dev_names_file_path>    
 2. Go to DeviantArt.com and export the `cookies.txt` file for that tab only (or for DeviantArt.com only).
 3. For `<cookies_txt_path>`, supply the path where the `cookies.txt` was exported/saved.  
      This should look something like `C:\Users\you\Downloads\cookies.txt` or `/Users/you/Downloads/cookies.txt`
+4. After exporting cookies from your browser, you can clear your browser cookies for DeviantArt.com (or all cookies) so that your cookies aren't shared between the browser and the bot (which might create issues). You'll then have to login on your browser again and this will give your browser a fresh set of cookies.
+
+If some command doesn't work, disable Eclipse and try again.
 
 ## Example
 
